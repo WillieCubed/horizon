@@ -89,6 +89,7 @@ interface TimelineProps {
 
 function Timeline({ data }: TimelineProps) {
   console.log(data);
+  // const
   const postElements = data.map((post) => {
     const date = new Date(post.timestamp * 1000);
     const year = date.getFullYear();

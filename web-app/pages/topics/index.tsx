@@ -2,35 +2,64 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import React from "react";
-import SiteHeader from '../../components/SiteHeader';
+import SiteHeader from "../../components/SiteHeader";
 import { PostInfo, TopicInfo } from "../../lib/types";
+import InfoIcon from "@mui/icons-material/Info";
+import { getFirestore, collection, query, getDocs } from 'firebase/firestore';
 
-function Post({ content, timestamp }: Omit<PostInfo, "author" | "entities">) {
+/**
+ * Return a redirect link to the permalink of the post with the given ID.
+ *
+ * @param postId The ID of the post provided by Reddit
+ */
+function getFullRedditLink(postId: string) {
+  return `https://reddit.com/${postId}`;
+}
+
+function Post({
+  id,
+  text: content,
+  timestamp,
+}: PostInfo) {
   const date = timestamp.toDateString();
   return (
-    <article className="pt-2">
+    <article id={id} className="pt-2">
       <div className="text-lg">{date}</div>
       <p>{content}</p>
+      <a
+        href={getFullRedditLink(id)}
+        className="inline-block py-2 uppercase font-bold text-primary"
+      >
+        Read more
+      </a>
     </article>
   );
 }
 
-function TopicCard({ title, postCount, start, end, posts }: TopicInfo) {
+function TopicCard({ name, postCount, start, end, posts }: TopicInfo) {
   const startDate = start.toLocaleDateString();
   const endDate = end.toLocaleDateString();
   return (
     <div className="p-4 rounded-md bg-white shadow-sm">
       <div className="mt-2">
-        <h1 className="text-2xl font-semibold">{title}</h1>
+        <h1 className="text-2xl font-semibold">{name}</h1>
         <div className="my-2">
-          {postCount} posts • {startDate} - {endDate}
+          <span className="font-bold">{postCount} posts</span> • {startDate} - {endDate}
         </div>
       </div>
       <div>
         {posts.map((post) => {
           // TODO: Fix this obviously
-          return <Post key={post.id} {...post} />;
+          const timestamp = new Date(post.timestamp)
+          return <Post key={post.id} {...post} timestamp={timestamp} />;
         })}
+      </div>
+      <div className="flex flex-row-reverse">
+        <div className="">
+          <Link href={`/topics/${name}`}>
+            See all
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -42,65 +71,97 @@ interface TopicListProps {
 
 function TopicList({ topics }: TopicListProps) {
   const items = topics.map((topic) => {
-    return <TopicCard key={topic.title} {...topic} />;
+    return <TopicCard key={topic.name} {...topic} />;
   });
   return <div className="space-y-4">{items}</div>;
 }
 
-const TEST_TOPICS = [
+const CURATED_TOPICS = [
   {
     id: "0-0001",
-    title: "Academic advising",
+    name: "Academic advising",
     postCount: 24,
-    start: new Date(2015, 4, 1),
-    end: new Date(),
+    start: new Date(2015, 8, 8),
+    end: new Date(2022, 11, 11),
     posts: [
       {
-        id: 'asfjoisjfd',
+        id: "asfjoisjfd",
         timestamp: new Date(2022, 11, 11),
-        content:
+        text:
           "I have had enough of ECS advisors and UTD in general. The instruction we get from most professors is already trash (excluding a handful of professors who actually care), but the advising system is even worse.",
       },
       {
-        id: 'fjafqrttaf',
-        timestamp: new Date(2022, 11, 11),
-        content:
-          "I have had enough of ECS advisors and UTD in general. The instruction we get from most professors is already trash (excluding a handful of professors who actually care), but the advising system is even worse.",
+        id: "fjafqrttaf",
+        timestamp: new Date(2022, 8, 8),
+        text:
+          "Is anyone else having trouble getting in contact with their CS advisors? It has been almost three weeks and I haven't gotten a response from mine about classes I need advising help with. I've noticed the classes are also filling up relatively quickly, which has me in a bit of a panic. I've tried calling, but the phones say that they're not taking calls. Is there any way to get in better contact with them? Does it normally take them this long to respond? I'm starting to worry that I won't be able to register for the classes I need before the deadline/before they fill up!",
       },
     ],
   },
   {
     id: "0-0002",
-    title: "Fanfiction",
-    postCount: 24,
-    start: new Date(2015, 4, 1),
+    name: "Fanfiction",
+    postCount: 3,
+    start: new Date(2022, 9, 10),
     end: new Date(),
     posts: [],
   },
   {
     id: "0-0003",
-    title: "Driving",
-    postCount: 24,
-    start: new Date(2015, 4, 1),
+    name: "Driving",
+    postCount: 10,
+    start: new Date(2015, 10, 1),
     end: new Date(),
     posts: [],
   },
   {
     id: "0-0003",
-    title: "COVID-19",
-    postCount: 24,
-    start: new Date(2015, 4, 1),
-    end: new Date(),
+    name: "COVID-19",
+    postCount: 16,
+    start: new Date(2020, 4, 1),
+    end: new Date(2022, 3, 1),
     posts: [],
   },
 ];
 
+const TOPICS_PATH = 'entities';
+
+
 export const TopicsPage: NextPage = () => {
-  const topics = TEST_TOPICS;
+  const topics = CURATED_TOPICS;
   // TODO: Load topics from database
-  const sidebarItems = topics.map(({ id, title }) => {
-    return <div key={id}>{title}</div>;
+  const sidebarItems = topics.map(({ id, name }) => {
+    return (
+      <li className="list-none">
+        <a key={id} className="block px-4 py-2 text-[#3454D1] font-semibold hover:bg-gray-300 transition" href={`#${id}`}>{name}</a>
+      </li>
+    );
   });
+
+  const [autoGeneratedTopics, setAutoGeneratedTopics] = React.useState([]);
+
+  async function fetchGeneratedTopics() {
+    const db = getFirestore();
+    // Filter posts by upvotes
+    const topicsRef = collection(db, TOPICS_PATH);
+    const timelineQuery = query(
+      topicsRef,
+    );
+    const querySnapshot = await getDocs(timelineQuery);
+    const data = querySnapshot.docs.map((doc) => doc.data()).map(({ start, end, ...data }) => {
+      return {
+        ...data,
+        start: new Date(start),
+        end: new Date(end),
+      };
+    })
+    console.log(data);
+    setAutoGeneratedTopics(data);
+  }
+
+  React.useState(() => {
+    fetchGeneratedTopics();
+  }, []);
 
   return (
     <div className="bg-slate-200 min-h-screen">
@@ -110,14 +171,14 @@ export const TopicsPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <SiteHeader />
-      <main className="grid px-4 grid-cols-[2fr_4fr_3fr] gap-x-4">
-        <aside id="sidebar">
-          <div>
-            <div>Sort by</div>
-            <div>Newness</div>
-            <div>{sidebarItems}</div>
-            <div className="p-4 font-bold">See all topics</div>
+      <main className="grid grid-cols-[3fr_4fr_3fr] gap-x-4">
+        <aside id="sidebar" className=''>
+          <div className='py-4 px-4'>
+            <div className='text-xl text-primary'>Sort by</div>
+            <div className='underline cursor-pointer'>Newness</div>
           </div>
+          <div>{sidebarItems}</div>
+          {/* <div className="p-4 font-bold">See all topics</div> */}
         </aside>
         <div>
           <section className="max-w-4xl mx-auto mt-8">
@@ -125,20 +186,33 @@ export const TopicsPage: NextPage = () => {
             <div>
               <div className="text-xl">Common topics</div>
             </div>
-
           </section>
           <section className="max-w-4xl mx-auto mt-8">
-            <div className="font-bold text-2xl">Browse Topics</div>
-            {/* TODO: Search */}
-          </section>
-          <section className="max-w-4xl mx-auto mt-4">
+            <div className="font-bold text-2xl">Curated Topics</div>
+            <div className="mt-2 mb-4 text-sm align-center space-x-2">
+              <InfoIcon />
+              <span>
+                These topics consist of collections that were manually curated
+                by a site admin.
+              </span>
+            </div>
             <TopicList topics={topics} />
+          </section>
+          <section className="max-w-4xl mx-auto my-4">
+            <div className="font-bold text-2xl">Auto-generated Topics</div>
+            <div className="mt-2 mb-4 text-sm align-center space-x-2">
+              <InfoIcon />
+              <span>
+                These topics were extracted from <a href="https://reddit.com/r/utdallas">Reddit</a> using a natural language model.
+              </span>
+            </div>
+            <TopicList topics={autoGeneratedTopics} />
           </section>
         </div>
         <section id="more">
           <div className="mt-4 bg-white">
-            <div className="p-4 text-xl">Useful info</div>
-            <div>See more info</div>
+            {/* <div className="p-4 text-xl">Topic trend over time</div> */}
+            {/* <div>See more info</div> */}
           </div>
         </section>
       </main>
