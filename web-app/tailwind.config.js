@@ -7,10 +7,13 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Roboto'],
+      },
       color: {
         primary: '#F9F7F0',
       },
     },
   },
   plugins: [],
-}
+};
