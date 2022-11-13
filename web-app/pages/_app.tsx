@@ -2,7 +2,7 @@ import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import '@fontsource/roboto';
+import "@fontsource/roboto";
 
 function TimebookApp({ Component, pageProps }: AppProps) {
   return <Component {...pageProps} />;
