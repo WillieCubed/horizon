@@ -65,6 +65,9 @@ export default function SiteHeader({ children }: React.PropsWithChildren) {
         <Link href="/topics" className="inline-block">
           Topics
         </Link>
+        <Link href="/timeline" className="inline-block">
+          Timeline
+        </Link>
         <UserProfileToolbarItem />
       </div>
     </header>

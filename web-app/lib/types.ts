@@ -3,26 +3,18 @@ export type TopicInfo = {
   postCount: number;
   start: Date;
   end: Date;
-  posts: {
-    id: string;
-    timestamp: Date;
-    content: string;
-  }[];
+  posts: PostInfo[];
 };
 
 export type PostInfo = {
+  title: string;
   id: string;
   author: {
     name: string;
   };
+  score: number;
   timestamp: Date;
-  content: string;
-  entities: string;
-};
-
-export type TrackedEntity = {
-  id: string;
-  label: string;
+  text: string;
 };
 
 export type Entity = {
