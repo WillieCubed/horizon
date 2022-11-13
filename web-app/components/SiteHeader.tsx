@@ -53,7 +53,7 @@ function UserProfileToolbarItem() {
 
 export default function SiteHeader({ children }: React.PropsWithChildren) {
   return (
-    <header className="py-4 px-4 bg-slate-500 text-white">
+    <header className="py-4 px-4 bg-slate-500 text-white sticky top-0 shadow-md">
       <div className="max-w-4xl mx-auto flex space-x-4">
         <Link
           href="/timeline"
