@@ -2,8 +2,8 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import React from "react";
-import SiteHeader from '../components/SiteHeader';
-import { PostInfo, TopicInfo } from "../lib/types";
+import SiteHeader from '../../components/SiteHeader';
+import { PostInfo, TopicInfo } from "../../lib/types";
 
 function Post({ content, timestamp }: Omit<PostInfo, "author" | "entities">) {
   const date = timestamp.toDateString();
@@ -28,7 +28,8 @@ function TopicCard({ title, postCount, start, end, posts }: TopicInfo) {
       </div>
       <div>
         {posts.map((post) => {
-          return <Post {...post} />;
+          // TODO: Fix this obviously
+          return <Post key={post.id} {...post} />;
         })}
       </div>
     </div>
@@ -41,7 +42,7 @@ interface TopicListProps {
 
 function TopicList({ topics }: TopicListProps) {
   const items = topics.map((topic) => {
-    return <TopicCard {...topic} />;
+    return <TopicCard key={topic.title} {...topic} />;
   });
   return <div className="space-y-4">{items}</div>;
 }
@@ -55,11 +56,13 @@ const TEST_TOPICS = [
     end: new Date(),
     posts: [
       {
+        id: 'asfjoisjfd',
         timestamp: new Date(2022, 11, 11),
         content:
           "I have had enough of ECS advisors and UTD in general. The instruction we get from most professors is already trash (excluding a handful of professors who actually care), but the advising system is even worse.",
       },
       {
+        id: 'fjafqrttaf',
         timestamp: new Date(2022, 11, 11),
         content:
           "I have had enough of ECS advisors and UTD in general. The instruction we get from most professors is already trash (excluding a handful of professors who actually care), but the advising system is even worse.",
@@ -102,7 +105,7 @@ export const TopicsPage: NextPage = () => {
   return (
     <div className="bg-slate-200 min-h-screen">
       <Head>
-        <title>Timebook</title>
+        <title>All Topics - Timebook</title>
         <meta name="description" content="A place to see collective memory." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -117,6 +120,13 @@ export const TopicsPage: NextPage = () => {
           </div>
         </aside>
         <div>
+          <section className="max-w-4xl mx-auto mt-8">
+            <div className="font-bold text-2xl">At a Glance</div>
+            <div>
+              <div className="text-xl">Common topics</div>
+            </div>
+
+          </section>
           <section className="max-w-4xl mx-auto mt-8">
             <div className="font-bold text-2xl">Browse Topics</div>
             {/* TODO: Search */}

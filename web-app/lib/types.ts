@@ -4,12 +4,14 @@ export type TopicInfo = {
   start: Date;
   end: Date;
   posts: {
+    id: string;
     timestamp: Date;
     content: string;
   }[];
 };
 
 export type PostInfo = {
+  id: string;
   author: {
     name: string;
   };
@@ -20,7 +22,7 @@ export type PostInfo = {
 
 export type TrackedEntity = {
   id: string;
-
+  label: string;
 };
 
 export type Entity = {
