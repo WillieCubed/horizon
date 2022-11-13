@@ -1,6 +1,11 @@
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import Link from 'next/link';
-import React from 'react';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
+import Link from "next/link";
+import React from "react";
 
 async function signIn() {
   const auth = getAuth();
@@ -54,12 +59,10 @@ export default function SiteHeader({ children }: React.PropsWithChildren) {
           href="/timeline"
           className="flex-1 inline-block text-xl font-bold"
         >
-          Timebook
+          🌌 Horizon
         </Link>
         {children}
-        <Link href="/topics"
-          className="inline-block"
-        >
+        <Link href="/topics" className="inline-block">
           Topics
         </Link>
         <UserProfileToolbarItem />
